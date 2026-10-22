@@ -1,46 +1,32 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-# 1. Definicja parametrów sygnału
-T0 = 1.0  # Okres podstawowy (T)
-T1 = T0 / 4  # Szerokość impulsu (w Twoim kodzie to było T/10)
-omega = 2 * np.pi / T0
+# Definicja osi czasu
+t = np.linspace(-0.5, 0.5, 1000)
+harmonics_list = [1, 3]
+offset = -0.25
+plt.figure(figsize=(10, 6))
 
-# 2. Zakres harmonicznych k (np. od -20 do 20)
-N = 20
-k_values = np.arange(-N, N + 1)
+# Rysowanie idealnej fali prostokątnej jako punktu odniesienia
+ideal_square = np.sign(np.sin(6*(t-offset)))
+plt.plot(t, ideal_square, label='Idealna fala prostokątna', color='black', linestyle='--', linewidth=2)
 
+# Obliczanie i rysowanie aproksymacji szeregiem Fourieria dla N harmonicznych
+for N in harmonics_list:
+    f_approx = np.zeros_like((6*(t-offset)))
+    for n in range(1, N + 1, 2):
+        f_approx += (4 / np.pi) * (1 / n) * np.sin(n * (6*(t-offset)))
+    plt.plot(t, f_approx, label=f'N = {N} harmonicznych', linewidth=1.5)
 
-# 3. Funkcja obliczająca współczynniki analitycznie
-def oblicz_Xk_analitycznie(k_vals, T0, T1):
-  omega_val = 2 * np.pi / T0
-  X_k = np.zeros(len(k_vals), dtype=complex)
-
-  for i, k in enumerate(k_vals):
-    if k == 0:
-      # Przypadek dla k = 0 (wartość średnia sygnału)
-      # W zależności od definicji współczynnika może to być T1/T0 lub 2*T1/T0
-      X_k[i] = 2*T1 / T0
-    else:
-      # Przypadek dla k != 0 (wzór podany przez Ciebie)
-      # Uwaga: jeśli sygnał jest przesunięty w czasie, często dochodzi tu czynnik fazowy e^(-j * k * omega * offset)
-      X_k[i] = np.sin(k * omega_val * T1) / (k * np.pi)
-
-  return X_k
-offset_czasu = -0.25
-X_k_przesuniete = X_k * np.exp(-1j * k * omega * offset_czasu)
-
-
-# Obliczenie współczynników
-X_k = oblicz_Xk_analitycznie(k_values, T0, T1)
-
-# 4. Wizualizacja wyników
-plt.figure(figsize=(10, 4))
-plt.stem(k_values, np.real(X_k), basefmt=" ", linefmt="tab:green", markerfmt="o")
-plt.title("Moduł współczynników Fouriera |X_k| (wzór analityczny)")
-plt.xlabel("Indeks harmonicznej k")
-plt.ylabel("|X_k|")
-plt.grid(True)
+# Stylizacja wykresów
+plt.title('Aproksymacja fali prostokątnej szeregiem Fourieria', fontsize=14, fontweight='bold')
+plt.xlabel('Czas (t)', fontsize=12)
+plt.ylabel('Amplituda', fontsize=12)
+plt.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+plt.axvline(0, color='gray', linestyle='--', linewidth=0.8)
+plt.grid(True, linestyle=':', alpha=0.6)
+plt.legend(loc='upper right', frameon=True)
 plt.tight_layout()
-plt.show()
 
+# Wyświetlenie wykresów
+plt.show()
