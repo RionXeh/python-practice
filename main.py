@@ -3,7 +3,7 @@ import numpy as np
 
 # 1. Definicja parametrów sygnału
 T0 = 1.0  # Okres podstawowy (T)
-T1 = T0 / 10  # Szerokość impulsu (w Twoim kodzie to było T/10)
+T1 = T0 / 4  # Szerokość impulsu (w Twoim kodzie to było T/10)
 omega = 2 * np.pi / T0
 
 # 2. Zakres harmonicznych k (np. od -20 do 20)
