@@ -1,41 +1,70 @@
 import numpy as np
+import scipy.signal as signal
 import matplotlib.pyplot as plt
 
-# 1. Definicja osi czasu dla sygnału nieokresowego
-dt = 0.01
-t = np.arange(-5, 5, dt)
+# ==========================================
+# 4.2 Custom freqs_lab Function definition
+# ==========================================
+def freqs_lab(B, A, Om):
+    """
+    Frequency response of transmittance H(s) = B(s) / A(s)
+    Om - frequency in rad/s, s = j * Om
+    """
+    Om = np.asarray(Om, dtype=float)
+    s = 1j * Om
+    num_vals = np.polyval(B, s)
+    den_vals = np.polyval(A, s)
+    H = num_vals / den_vals
+    return H
 
-# Definicja pojedynczego impulsu prostokątnego o szerokości od -1 do 1
-x_t = np.where(np.abs(t) <= 1, 1.0, 0.0)
 
-# 2. Obliczenie transformaty Fouriera (przybliżenie całki za pomocą FFT)
-X_f = np.fft.fft(x_t) * dt
-frequencies = np.fft.fftfreq(len(t), dt)
+f0 = 50.0                        # Target frequency in Hz
+Omega_0 = 2 * np.pi * f0         # Angular frequency Omega_0 ≈ 314.16 rad/s
 
-# Przesunięcie składowej zerowej na środek wykresu
-X_f_shifted = np.fft.fftshift(X_f)
-frequencies_shifted = np.fft.fftshift(frequencies)
+c = Omega_0**2
+b = Omega_0**2
+a = 15               # Damping parameter
 
-# 3. Wizualizacja wyników
-fig, axes = plt.subplots(2, 1, figsize=(10, 7))
+B = [1, 0, c]
+A = [1, a, b]
 
-# Wykres w dziedzinie czasu
-axes[0].plot(t, x_t, color='blue', linewidth=2)
-axes[0].set_title('Sygnał w dziedzinie czasu: Pojedynczy impuls prostokątny', fontsize=12, fontweight='bold')
-axes[0].set_xlabel('Czas ($t$)', fontsize=10)
-axes[0].set_ylabel('$x(t)$', fontsize=10)
-axes[0].grid(True, linestyle=':', alpha=0.6)
-axes[0].set_ylim(-0.2, 1.2)
+# Zakres częstotliwości od 45 do 55 Hz (przeliczony na rad/s)
+Om = np.linspace(45 * 2 * np.pi, 55 * 2 * np.pi, 1000)
 
-# Wykres w dziedzinie częstotliwości (widmo amplitudowe - moduł transformaty)
-axes[1].plot(frequencies_shifted, np.abs(X_f_shifted), color='red', linewidth=1.5)
-axes[1].set_title('Transformata Fouriera: Widmo amplitudowe $|X(f)|$ (funkcja sinc)', fontsize=12, fontweight='bold')
-axes[1].set_xlabel('Częstotliwość ($f$)', fontsize=10)
-axes[1].set_ylabel('$|X(f)|$', fontsize=10)
-axes[1].grid(True, linestyle=':', alpha=0.6)
-axes[1].set_xlim(-5, 5)
+# 1. Użycie funkcji freqs_lab
+H = freqs_lab(B, A, Om)
+
+# 2. Użycie funkcji freqs z SciPy do porównania
+_, H_scipy = signal.freqs(B, A, worN=Om)
+
+# Czas od 0 do 0.5 sekundy dla odpowiedzi impulsowej
+t, y_impulse = signal.impulse((B, A), T=np.linspace(0, 0.5, 1000))
+
+
+# ==========================================
+# Wykresy (2 podwykresy: charakterystyka i odpowiedź)
+# ==========================================
+plt.figure(figsize=(10, 8))
+
+# 1. Charakterystyka amplitudowa (45 - 55 Hz)
+plt.subplot(2, 1, 1)
+freqs_hz = Om / (2 * np.pi)
+plt.plot(freqs_hz, 20 * np.log10(np.abs(H)), 'b-', linewidth=2, label='freqs_lab')
+plt.plot(freqs_hz, 20 * np.log10(np.abs(H_scipy)), 'r--', linewidth=1, label='scipy.signal.freqs')
+plt.title('Charakterystyka amplitudowa filtru (45 - 55 Hz)')
+plt.xlabel('Częstotliwość (Hz)')
+plt.ylabel('Amplituda (dB)')
+plt.axvline(50, color='green', linestyle=':', label='Tłumienie 50 Hz')
+plt.grid(True)
+plt.legend()
+
+# 2. Odpowiedź impulsowa (0 - 0.5 s)
+plt.subplot(2, 1, 2)
+plt.plot(t, y_impulse, color='darkorange', linewidth=1.2)
+plt.title('Odpowiedź impulsowa (0 do 0.5 s)')
+plt.xlabel('Czas (s)')
+plt.ylabel('Amplituda')
+plt.grid(True)
 
 plt.tight_layout()
-
-# Wyświetlenie wykresów
 plt.show()
