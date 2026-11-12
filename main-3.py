@@ -44,7 +44,7 @@ plt.xlabel('Frequency (Hz)')
 plt.ylabel('Magnitude (dB)')
 plt.grid(True)
 plt.axvline(f0, color='r', linestyle='--', label=f'Notch ({f0} Hz)')
-plt.ylim(-60, 5)
+plt.ylim(-30, 5)
 plt.legend()
 
 # Impulse Response Plot
